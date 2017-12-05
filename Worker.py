@@ -6,16 +6,26 @@ INITIAL_MANAGER_CALL = "http://127.0.0.1:5000/add_new_worker"
 
 def initial_call_to_manager():
     response = requests.get(INITIAL_MANAGER_CALL, json={'register_wth_manager': True})
-    worker_id = response.json()['worker_id']
-    print "NOTE: new worker has made initial comms with manager\nworker id = {}".format(worker_id)
-    return worker_id
+    did_registration_work = response.json()['did_it_work']
+    if did_registration_work is True:
+        worker_id = response.json()['worker_id']
+        print "NOTE: new worker has made initial comms with manager\nworker id = {}".format(worker_id)
+        return worker_id
+    else:
+        worker_id = None
+        print "ERROR: Worker registration did not work and an error occurred with the manager..." \
+              "worker id assigned by manager: {}".format(response.json()['worker_id'])
+        return worker_id
 
 
 class Worker:
     def __init__(self):
         self.name = 'worker'
         self.working = True
-        self.worker_id = initial_call_to_manager()
+        if initial_call_to_manager() is not None:
+            self.worker_id = initial_call_to_manager()
+        else:
+            return
 
     def get_work(self):
         print "in workers get work function"

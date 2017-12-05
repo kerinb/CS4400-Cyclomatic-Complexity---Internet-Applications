@@ -1,9 +1,12 @@
 import radon
-from flask import Flask
+from flask import Flask, request
+import requests
 from flask_restful import Api, Resource
 
 app = Flask(__name__)
 api = Api(app)
+
+NUM_OF_ACTIVE_WORKERS = 0
 
 
 class Manager(Resource):
@@ -16,7 +19,16 @@ class Manager(Resource):
 
 class AddNewWorker(Resource):
     def get(self):
-        print "in AddNewWorker method in Manager folder."
+        global NUM_OF_ACTIVE_WORKERS
+        print "in AddNewWorker method in Manager folder"
+        initial_request_from_worker = request.get_json()['register_wth_manager']
+        if initial_request_from_worker is True:
+            response={'worker_id': NUM_OF_ACTIVE_WORKERS, 'did_it_work': True}
+            NUM_OF_ACTIVE_WORKERS += 1
+        else:
+            response={'worker_id': None, 'did_it_work': False}
+        return response
+
 
 api.add_resource(Manager, '/')
 api.add_resource(AddNewWorker, '/add_new_worker')
