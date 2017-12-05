@@ -23,5 +23,5 @@ def clone_git_repo(path_to_local_repo):
     return repo
 
 
-def get_commits(path_to_local_repo):
+def get_commits():
     pass

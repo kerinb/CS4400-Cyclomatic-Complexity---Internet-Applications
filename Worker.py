@@ -36,7 +36,7 @@ class Worker:
             if work_from_manager is False:
                 break
             elif work_from_manager is not None:
-                files = work_from_manager.json()['files']
+                files = work_from_manager.json()['commits']
                 self.work(files)
         print "No more work from manager...\nfunction complete..."
 
