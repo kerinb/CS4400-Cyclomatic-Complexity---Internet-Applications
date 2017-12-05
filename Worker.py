@@ -8,8 +8,8 @@ INITIAL_MANAGER_CALL = "http://127.0.0.1:5000/add_new_worker"
 def initial_call_to_manager():
     response = requests.get(INITIAL_MANAGER_CALL, json={'register_wth_manager': True})
     did_registration_work = response.json()['did_it_work']
+    worker_id = response.json()['worker_id']
     if did_registration_work is True:
-        worker_id = response.json()['worker_id']
         print "NOTE: new worker has made initial comms with manager\nworker id = {}".format(worker_id)
         return worker_id
     else:
@@ -23,8 +23,9 @@ class Worker:
     def __init__(self):
         self.name = 'worker'
         self.working = True
-        if initial_call_to_manager() is not None:
-            self.worker_id = initial_call_to_manager()
+        response = initial_call_to_manager()
+        if response is not None:
+            self.worker_id = response
         else:
             return
 
