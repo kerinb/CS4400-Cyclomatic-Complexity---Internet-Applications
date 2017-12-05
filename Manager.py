@@ -1,9 +1,6 @@
-import os
-import radon
 import sys
 import SharedFunctionLibrary as SFL
 from flask import Flask, request
-import requests
 from flask_restful import Api, Resource
 
 ROOT_FOR_REPO = "git_repo/"
@@ -19,7 +16,6 @@ LIST_OF_COMMITS = []
 class Manager(Resource):
     def get(self):
         global CURR_COMMIT_POS, LIST_OF_COMMITS
-        print "HELLO WORLD!\nI am in Manager's get function"
         if len(LIST_OF_COMMITS) > CURR_COMMIT_POS:
             commits = LIST_OF_COMMITS[CURR_COMMIT_POS]
             CURR_COMMIT_POS += 1
@@ -36,7 +32,6 @@ class Manager(Resource):
 class AddNewWorker(Resource):
     def get(self):
         global NUM_OF_ACTIVE_WORKERS
-        print "in AddNewWorker method in Manager folder"
         initial_request_from_worker = request.get_json()['register_wth_manager']
         if initial_request_from_worker is True:
             response = {'worker_id': NUM_OF_ACTIVE_WORKERS, 'did_it_work': True}

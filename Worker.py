@@ -1,8 +1,12 @@
 import os
 import requests
+from git import Repo
+from radon.cli import CCHarvester, Config
+from radon.complexity import SCORE
 
 MANAGER_URL = "http://127.0.0.1:5000"
 INITIAL_MANAGER_CALL = "http://127.0.0.1:5000/add_new_worker"
+ROOT_FOR_REPO = "git_repo/"
 
 
 def initial_call_to_manager():
@@ -19,7 +23,22 @@ def initial_call_to_manager():
         return worker_id
 
 
+def get_files_from_given_commit(commit):
+    files_from_commit = []
+    for root, dirs, files in os.walk(ROOT_FOR_REPO, topdown=True):
+        for file_ in files:
+            if file_.endswith('.py'):
+                files_from_commit.append(ROOT_FOR_REPO + file_)
+    return files_from_commit
+
+
 class Worker:
+    cc_config = Config(
+        exclude=None, ignore=None, order=SCORE, json=False, no_assert=False,
+        min='A', max='F', show_complexity=True, average=False,
+        show_closures=False, total_average=False, xml=False, codeclimate=False
+    )
+
     def __init__(self):
         self.name = 'worker'
         self.working = True
@@ -30,19 +49,32 @@ class Worker:
             return
 
     def get_work(self):
-        print "in workers get work function"
         while self.working:
             work_from_manager = requests.get(MANAGER_URL)
-            files = work_from_manager.json()['commits']
-            if files is None:
+            commit = work_from_manager.json()['commits']
+            if commit is None:
                 break
             elif work_from_manager is not None:
-                self.work(files)
+                self.work(commit)
         print "No more work from manager...\nfunction complete..."
 
-    def work(self, files):
+    def work(self, commit):
         print "in workers work function"
-
+        total_complexity = 0
+        num_files = 0
+        files = get_files_from_given_commit(commit)
+        for file_ in files:
+            file_complexity = 0
+            print file_
+            open_file = open(file_, 'r')
+            cc_results = CCHarvester(file_, self.cc_config).gobble(open_file)
+            for cc_res in cc_results:
+                file_complexity += int(cc_res.complexity)
+            total_complexity += file_complexity
+        num_files += 1
+        avg_complexity = total_complexity/num_files
+        print "Worker {0} calculated total complexity: {1} for commit {2}".format(self.worker_id, total_complexity, commit,)
+        print "avg complexity is: {}".format(avg_complexity)
 
 if __name__ == '__main__':
     worker = Worker()
