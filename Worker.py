@@ -1,5 +1,6 @@
 import os
 import requests
+from git import Repo
 from radon.cli import CCHarvester, Config
 from radon.complexity import SCORE
 
@@ -10,21 +11,18 @@ ROOT_FOR_REPO = "git_repo/"
 
 def initial_call_to_manager():
     response = requests.get(INITIAL_MANAGER_CALL, json={'register_wth_manager': True})
-    did_registration_work = response.json()['did_it_work']
     worker_id = response.json()['worker_id']
-    if did_registration_work is True:
-        print "NOTE: new worker has made initial comms with manager\nworker id = {}".format(worker_id)
-        return worker_id
-    else:
-        worker_id = None
-        print "ERROR: Worker registration did not work and an error occurred with the manager..." \
-              "worker id assigned by manager: {}".format(response.json()['worker_id'])
-        return worker_id
+    working_dir = response.json()['dir']
+    print "NOTE: new worker has made initial comms with manager\nworker id = {}".format(worker_id)
+    return worker_id, working_dir
 
 
-def get_files_from_given_commit():
+def get_files_from_given_commit(repo_dir, commit):
+    repo = Repo(repo_dir)
+    repo = repo.git
+    repo.checkout(commit)
     files_from_commit = []
-    for root, dirs, files in os.walk(ROOT_FOR_REPO, topdown=True):
+    for root, dirs, files in os.walk(repo_dir, topdown=True):
         for file_ in files:
             if file_.endswith('.py'):
                 files_from_commit.append(root + '/' + file_)
@@ -40,11 +38,7 @@ class Worker:
     def __init__(self):
         self.name = 'worker'
         self.working = True
-        response = initial_call_to_manager()
-        if response is not None:
-            self.worker_id = response
-        else:
-            return
+        self.worker_id = response, self.working_dir = initial_call_to_manager()
 
     def get_work(self):
         while self.working:
@@ -53,14 +47,15 @@ class Worker:
             if commit is None:
                 break
             elif work_from_manager is not None:
-                self.work(commit)
+                avg_cc = self.work(commit)
+                requests.post(MANAGER_URL,  json={'avg_cc': avg_cc})
         print "No more work from manager...\nfunction complete..."
 
     def work(self, commit):
         print "in workers work function"
         total_complexity = 0
         num_files = 0
-        files = get_files_from_given_commit()
+        files = get_files_from_given_commit(self.working_dir, commit)
         for file_ in files:
             file_complexity = 0
             print file_
@@ -70,9 +65,11 @@ class Worker:
                 file_complexity += int(cc_res.complexity)
             total_complexity += file_complexity
         num_files += 1
-        avg_complexity = total_complexity/num_files
-        print "Worker {0} calculated total complexity: {1} for commit {2}".format(self.worker_id, total_complexity, commit,)
+        avg_complexity = total_complexity / num_files
+        print "Worker {0} calculated total complexity: {1} for commit {2}".format(self.worker_id, total_complexity,                                                                       commit, )
         print "avg complexity is: {}".format(avg_complexity)
+        return avg_complexity
+
 
 if __name__ == '__main__':
     worker = Worker()

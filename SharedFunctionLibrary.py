@@ -18,7 +18,3 @@ def clone_git_repo(path_to_local_repo):
         repo = Repo(path_to_local_repo)
         print "got repo"
     return repo
-
-
-def get_commits():
-    pass
