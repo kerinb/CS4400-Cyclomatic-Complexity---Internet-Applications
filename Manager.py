@@ -20,7 +20,7 @@ class Manager(Resource):
     def get(self):
         global CURR_COMMIT_POS, LIST_OF_COMMITS
         print "HELLO WORLD!\nI am in Manager's get function"
-        if len(LIST_OF_COMMITS) >= CURR_COMMIT_POS:
+        if len(LIST_OF_COMMITS) > CURR_COMMIT_POS:
             commits = LIST_OF_COMMITS[CURR_COMMIT_POS]
             CURR_COMMIT_POS += 1
             print "commit number:{0}\ncommit file:{1}".format(CURR_COMMIT_POS, commits)

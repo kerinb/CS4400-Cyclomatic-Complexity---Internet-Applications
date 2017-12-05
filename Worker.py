@@ -33,10 +33,10 @@ class Worker:
         print "in workers get work function"
         while self.working:
             work_from_manager = requests.get(MANAGER_URL)
-            if work_from_manager is False:
+            files = work_from_manager.json()['commits']
+            if files is None:
                 break
             elif work_from_manager is not None:
-                files = work_from_manager.json()['commits']
                 self.work(files)
         print "No more work from manager...\nfunction complete..."
 
