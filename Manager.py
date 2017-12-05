@@ -1,7 +1,11 @@
+import os
 import radon
+import sys
+import SharedFunctionLibrary as SFL
 from flask import Flask, request
 import requests
 from flask_restful import Api, Resource
+ROOT_FOR_REPO = "git_repo/"
 
 app = Flask(__name__)
 api = Api(app)
@@ -34,4 +38,9 @@ api.add_resource(Manager, '/')
 api.add_resource(AddNewWorker, '/add_new_worker')
 
 if __name__ == "__main__":
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    global ROOT_FOR_REPO
+    SFL.clone_git_repo(ROOT_FOR_REPO)
+    SFL.get_commits(ROOT_FOR_REPO)
+    app.run(debug=False, host='127.0.0.1', port=5000)
+    while NUM_OF_ACTIVE_WORKERS < sys.argv[1]:
+        pass
