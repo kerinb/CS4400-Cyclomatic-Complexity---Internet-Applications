@@ -1,6 +1,5 @@
 import os
 import requests
-from git import Repo
 from radon.cli import CCHarvester, Config
 from radon.complexity import SCORE
 
@@ -23,20 +22,19 @@ def initial_call_to_manager():
         return worker_id
 
 
-def get_files_from_given_commit(commit):
+def get_files_from_given_commit():
     files_from_commit = []
     for root, dirs, files in os.walk(ROOT_FOR_REPO, topdown=True):
         for file_ in files:
             if file_.endswith('.py'):
-                files_from_commit.append(ROOT_FOR_REPO + file_)
+                files_from_commit.append(root + '/' + file_)
     return files_from_commit
 
 
 class Worker:
     cc_config = Config(
-        exclude=None, ignore=None, order=SCORE, json=False, no_assert=False,
-        min='A', max='F', show_complexity=True, average=False,
-        show_closures=False, total_average=False, xml=False, codeclimate=False
+        exclude='', ignore='venv', order=SCORE, max='F',
+        no_assert=True, show_closures=False, min='A'
     )
 
     def __init__(self):
@@ -62,7 +60,7 @@ class Worker:
         print "in workers work function"
         total_complexity = 0
         num_files = 0
-        files = get_files_from_given_commit(commit)
+        files = get_files_from_given_commit()
         for file_ in files:
             file_complexity = 0
             print file_
