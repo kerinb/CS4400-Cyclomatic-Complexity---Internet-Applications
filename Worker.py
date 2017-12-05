@@ -18,8 +18,7 @@ def initial_call_to_manager():
 
 
 def get_files_from_given_commit(repo_dir, commit):
-    repo = Repo(repo_dir)
-    repo = repo.git
+    repo = Repo(repo_dir).git
     repo.checkout(commit)
     files_from_commit = []
     for root, dirs, files in os.walk(repo_dir, topdown=True):
@@ -36,7 +35,6 @@ class Worker:
     )
 
     def __init__(self):
-        self.name = 'worker'
         self.working = True
         self.worker_id = response, self.working_dir = initial_call_to_manager()
 
@@ -50,9 +48,9 @@ class Worker:
                 avg_cc = self.work(commit)
                 requests.post(MANAGER_URL,  json={'avg_cc': avg_cc})
         print "No more work from manager...\nfunction complete..."
+        return self.worker_id
 
     def work(self, commit):
-        print "in workers work function"
         total_complexity = 0
         num_files = 0
         files = get_files_from_given_commit(self.working_dir, commit)
@@ -66,12 +64,16 @@ class Worker:
             total_complexity += file_complexity
         num_files += 1
         avg_complexity = total_complexity / num_files
-        print "Worker {0} calculated total complexity: {1} for commit {2}".format(self.worker_id, total_complexity,                                                                       commit, )
         print "avg complexity is: {}".format(avg_complexity)
         return avg_complexity
 
 
+def shutdownWorker():
+    requests.post(INITIAL_MANAGER_CALL)
+
+
 if __name__ == '__main__':
     worker = Worker()
-    worker.get_work()
-    print "Done Working..."
+    wid = worker.get_work()
+    print "Worker{} done Working...".format(wid)
+    shutdownWorker()

@@ -12,34 +12,48 @@ app = Flask(__name__)
 api = Api(app)
 
 NUM_OF_ACTIVE_WORKERS = 0
-CURR_COMMIT_POS = 0
+CURRENT_COMMIT_POSITION = 0
 LIST_OF_COMMITS = []
-list_of_cc = []
+LIST_OF_AVG_CC = []
 
 
 class Manager(Resource):
     def get(self):
-        global CURR_COMMIT_POS, LIST_OF_COMMITS
-        if len(LIST_OF_COMMITS) > CURR_COMMIT_POS:
-            commits = LIST_OF_COMMITS[CURR_COMMIT_POS]
-            CURR_COMMIT_POS += 1
-            print "commit number:{0}\ncommit file:{1}".format(CURR_COMMIT_POS, commits)
+        """
+        returns a commit to the worker to calculate the Cyclomatic Complexity (McCabe's Complexity) for a git repository
+        specifically my repository for my CS4400-DistributedFileServer project
+        :returns the commit each worker needs to calculate the Cyclomatic /McCabe's complexity for
+        """
+        global CURRENT_COMMIT_POSITION, LIST_OF_COMMITS
+        if len(LIST_OF_COMMITS) > CURRENT_COMMIT_POSITION:
+            commits = LIST_OF_COMMITS[CURRENT_COMMIT_POSITION]
+            CURRENT_COMMIT_POSITION += 1
+            print "commit number:{0}".format(CURRENT_COMMIT_POSITION)
             response = {'commits': commits}
         else:
             response = {'commits': None}
         return response
 
     def post(self):
-        print "HELLO WORLD!\nI am in Manager's post function"
+        """
+        appends the calculated Cyclomatic /McCabes complexity for a git repository
+        :returns nothing
+        """
         avg = request.get_json()['avg_cc']
-        list_of_cc.append(avg)
-        print list_of_cc
+        LIST_OF_AVG_CC.append(avg)
+        print sum(LIST_OF_AVG_CC)/len(LIST_OF_AVG_CC)
 
 
 class AddNewWorker(Resource):
     def get(self):
+        """
+        registers a new worker with the "manager" server.
+        A worker id and worker directory are assigned to every worker who registers
+        :returns worker_id and worker_directory to newly registered worker
+        """
         global NUM_OF_ACTIVE_WORKERS
         initial_request_from_worker = request.get_json()['register_wth_manager']
+
         if initial_request_from_worker is True:
             dir_to_clone_into = 'Worker{0}'.format(NUM_OF_ACTIVE_WORKERS)
             if not os.path.exists(dir_to_clone_into):
@@ -51,12 +65,24 @@ class AddNewWorker(Resource):
             response = {'worker_id': None, 'dir': None}
         return response
 
+    def post(self):
+        global NUM_OF_ACTIVE_WORKERS
+        """
+        this function is used to simply decrement thw number of workers alive - when this reaches zero, the Cyclomatic/
+        McCabe's complexity is then calculated and the server can die with a user input; so we wont lose the results.
+        :return: nothing 
+        """
+        NUM_OF_ACTIVE_WORKERS -= 1
+        print "NUMBER OF ACTIVE CLIENTS: {}".format(NUM_OF_ACTIVE_WORKERS)
+        if NUM_OF_ACTIVE_WORKERS is 0:
+            raw_input("Hit enter to shut down Manager\nMAKE SURE TO TAKE YOUR RESULTS!")
+            raise RuntimeError("Manager shutting down....")
+
 
 api.add_resource(Manager, '/')
 api.add_resource(AddNewWorker, '/add_new_worker')
 
 if __name__ == "__main__":
-    global ROOT_FOR_REPO, CURR_COMMIT_POS, LIST_OF_COMMITS
     repo = SFL.clone_git_repo(ROOT_FOR_REPO)
 
     for commit in repo.iter_commits():
