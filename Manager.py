@@ -1,7 +1,5 @@
-import sys
-
+import time
 import os
-
 import SharedFunctionLibrary as SFL
 from flask import Flask, request
 from flask_restful import Api, Resource
@@ -75,9 +73,10 @@ class AddNewWorker(Resource):
         NUM_OF_ACTIVE_WORKERS -= 1
         print "NUMBER OF ACTIVE CLIENTS: {}".format(NUM_OF_ACTIVE_WORKERS)
         if NUM_OF_ACTIVE_WORKERS is 0:
-            raw_input("Hit enter to shut down Manager\nMAKE SURE TO TAKE YOUR RESULTS!")
-            raise RuntimeError("Manager shutting down....")
-
+            func = request.environ.get('werkzeug.server.shutdown')
+            if func is None:
+                raise RuntimeError('Not running with the Werkzeug Server')
+            func()
 
 api.add_resource(Manager, '/')
 api.add_resource(AddNewWorker, '/add_new_worker')
@@ -88,6 +87,8 @@ if __name__ == "__main__":
     for commit in repo.iter_commits():
         LIST_OF_COMMITS.append(str(commit))
 
+    start = time.time()
     app.run(debug=False, host='127.0.0.1', port=5000)
-    while NUM_OF_ACTIVE_WORKERS < sys.argv[1]:
-        pass
+    end = time.time()
+    time_taken = end - start
+    print "TIME TAKEN TO CALCULATE CC: {}".format(time_taken)
