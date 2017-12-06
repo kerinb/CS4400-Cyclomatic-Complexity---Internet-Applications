@@ -1,9 +1,6 @@
-#!/bin/sh
-max=$1
-echo "max: $max"
-for i in {0..$max}
+#!bin/bash
+for ((i = 1; i <= $1; i++))
 do
-    echo "$i"
     python Worker.py &
 done
 wait
