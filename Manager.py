@@ -97,4 +97,4 @@ if __name__ == "__main__":
     app.run(debug=False, host='127.0.0.1', port=5000)
     end = time.time()
     time_taken_over_average = end - start
-    print "TIME TAKEN TO CALCULATE CC: {}".format(time_taken_over_average)
+    print "TIME TAKEN TO RUN PROGRAM CC: {}".format(time_taken_over_average)

@@ -1,4 +1,4 @@
-for i in range (0 .. $1)
+for ((i = 1; i <= $1; i++))
 do
     python Worker.py
 done
