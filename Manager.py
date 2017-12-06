@@ -58,6 +58,7 @@ class AddNewWorker(Resource):
         initial_request_from_worker = request.get_json()['register_wth_manager']
 
         if initial_request_from_worker is True:
+            print "Spawning a new worker with id: {}".format(NUM_OF_ACTIVE_WORKERS)
             dir_to_clone_into = 'Worker{0}'.format(NUM_OF_ACTIVE_WORKERS)
             if not os.path.exists(dir_to_clone_into):
                 os.mkdir(dir_to_clone_into)
@@ -75,6 +76,7 @@ class AddNewWorker(Resource):
         McCabe's complexity is then calculated and the server can die with a user input; so we wont lose the results.
         :return: nothing 
         """
+        print "Killing worker with id: {}".format(NUM_OF_ACTIVE_WORKERS)
         NUM_OF_ACTIVE_WORKERS -= 1
         print "NUMBER OF ACTIVE CLIENTS: {}".format(NUM_OF_ACTIVE_WORKERS)
         if NUM_OF_ACTIVE_WORKERS is 0:
