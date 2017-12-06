@@ -1,8 +1,5 @@
 import time
 import os
-
-import sys
-
 import SharedFunctionLibrary as SFL
 from flask import Flask, request
 from flask_restful import Api, Resource
