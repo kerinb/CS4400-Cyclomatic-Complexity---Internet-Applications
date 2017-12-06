@@ -53,6 +53,9 @@ class Worker:
         print "No more work from manager...\nfunction complete..."
         return self.worker_id
 
+
+# TODO - I want to calculate the time taken to compute the CC for each file here to get a more representative idea of
+    #  time
     def work(self, commit):
         total_complexity = 0
         num_files = 0
