@@ -1,5 +1,7 @@
-for i in $1
+max=$1
+echo "max: $max"
+for i in `seq 2 $max`
 do
-    echo "workers spawned $i"
+    echo "$i"
     python Worker.py
 done
