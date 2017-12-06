@@ -1,5 +1,8 @@
 import time
 import os
+
+import sys
+
 import SharedFunctionLibrary as SFL
 from flask import Flask, request
 from flask_restful import Api, Resource
@@ -13,6 +16,7 @@ NUM_OF_ACTIVE_WORKERS = 0
 CURRENT_COMMIT_POSITION = 0
 LIST_OF_COMMITS = []
 LIST_OF_AVG_CC = []
+LIST_OF_TIME_PER_AVG = []
 
 
 class Manager(Resource):
@@ -38,8 +42,12 @@ class Manager(Resource):
         :returns nothing
         """
         avg = request.get_json()['avg_cc']
+        time_per_commit = request.get_json()['time']
         LIST_OF_AVG_CC.append(avg)
-        print sum(LIST_OF_AVG_CC)/len(LIST_OF_AVG_CC)
+        LIST_OF_TIME_PER_AVG.append(time_per_commit)
+        print "AVG SUM:{}\nAVG TIME:{}\nTOTAL TIME: {}".format(sum(LIST_OF_AVG_CC) / len(LIST_OF_AVG_CC),
+                                                               (sum(LIST_OF_TIME_PER_AVG) / len(LIST_OF_AVG_CC)),
+                                                               sum(LIST_OF_TIME_PER_AVG))
 
 
 class AddNewWorker(Resource):
@@ -78,6 +86,7 @@ class AddNewWorker(Resource):
                 raise RuntimeError('Not running with the Werkzeug Server')
             func()
 
+
 api.add_resource(Manager, '/')
 api.add_resource(AddNewWorker, '/add_new_worker')
 
@@ -90,5 +99,5 @@ if __name__ == "__main__":
     start = time.time()
     app.run(debug=False, host='127.0.0.1', port=5000)
     end = time.time()
-    time_taken = end - start
-    print "TIME TAKEN TO CALCULATE CC: {}".format(time_taken)
+    time_taken_over_average = end - start
+    print "TIME TAKEN TO CALCULATE CC: {}".format(time_taken_over_average)

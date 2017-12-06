@@ -1,5 +1,6 @@
 import os
 import requests
+import time
 from git import Repo
 from radon.cli import CCHarvester, Config
 from radon.complexity import SCORE
@@ -13,7 +14,6 @@ def initial_call_to_manager():
     response = requests.get(INITIAL_MANAGER_CALL, json={'register_wth_manager': True})
     worker_id = response.json()['worker_id']
     working_dir = response.json()['dir']
-    print "NOTE: new worker has made initial comms with manager\nworker id = {}".format(worker_id)
     return worker_id, working_dir
 
 
@@ -45,8 +45,11 @@ class Worker:
             if commit is None:
                 break
             elif work_from_manager is not None:
+                start = time.time()
                 avg_cc = self.work(commit)
-                requests.post(MANAGER_URL,  json={'avg_cc': avg_cc})
+                end = time.time()
+                time_taken_over_commit = end - start
+                requests.post(MANAGER_URL,  json={'avg_cc': avg_cc, 'time': time_taken_over_commit})
         print "No more work from manager...\nfunction complete..."
         return self.worker_id
 
