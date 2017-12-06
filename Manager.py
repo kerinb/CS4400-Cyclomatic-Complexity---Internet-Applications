@@ -63,11 +63,11 @@ class AddNewWorker(Resource):
 
         if initial_request_from_worker is True:
             print "Spawning a new worker with id: {}".format(NUM_OF_ACTIVE_WORKERS)
-            dir_to_clone_into = 'Worker{0}'.format(NUM_OF_ACTIVE_WORKERS)
-            if not os.path.exists(dir_to_clone_into):
-                os.mkdir(dir_to_clone_into)
-            SFL.clone_git_repo(dir_to_clone_into)
-            response = {'worker_id': NUM_OF_ACTIVE_WORKERS, 'dir': dir_to_clone_into}
+            #dir_to_clone_into = 'Worker{0}'.format(NUM_OF_ACTIVE_WORKERS)
+            #if not os.path.exists(dir_to_clone_into):
+            #    os.mkdir(dir_to_clone_into)
+            #SFL.clone_git_repo(dir_to_clone_into)
+            response = {'worker_id': NUM_OF_ACTIVE_WORKERS, 'dir': 'git_repo'}
             NUM_OF_ACTIVE_WORKERS += 1
             TOTAL_NUMBER_OF_WORKERS = NUM_OF_ACTIVE_WORKERS
         else:
