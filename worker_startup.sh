@@ -2,6 +2,6 @@
 
 for i in $1
 do
-    ./worker.py
+    ./Worker.py
 done
 wait
