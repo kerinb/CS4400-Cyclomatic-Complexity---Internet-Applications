@@ -3,5 +3,6 @@ echo "max: $max"
 for i in {0..$max}
 do
     echo "$i"
-    python Worker.py
+    python Worker.py &
 done
+wait
