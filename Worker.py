@@ -53,18 +53,17 @@ class Worker:
         print "No more work from manager...\nfunction complete..."
         return self.worker_id
 
-
-# TODO - I want to calculate the time taken to compute the CC for each file here to get a more representative idea of
-    #  time
     def work(self, commit):
         total_complexity = 0
         num_files = 0
         files = get_files_from_given_commit(self.working_dir, commit)
+
         for file_ in files:
             file_complexity = 0
             print file_
             open_file = open(file_, 'r')
             cc_results = CCHarvester(file_, self.cc_config).gobble(open_file)
+
             for cc_res in cc_results:
                 file_complexity += int(cc_res.complexity)
             total_complexity += file_complexity

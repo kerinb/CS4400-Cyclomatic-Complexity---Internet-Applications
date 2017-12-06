@@ -14,6 +14,7 @@ CURRENT_COMMIT_POSITION = 0
 LIST_OF_COMMITS = []
 LIST_OF_AVG_CC = []
 LIST_OF_TIME_PER_AVG = []
+TOTAL_NUMBER_OF_WORKERS = []
 
 
 class Manager(Resource):
@@ -42,9 +43,12 @@ class Manager(Resource):
         time_per_commit = request.get_json()['time']
         LIST_OF_AVG_CC.append(avg)
         LIST_OF_TIME_PER_AVG.append(time_per_commit)
-        print "AVG SUM:{}\nAVG TIME:{}\nTOTAL TIME: {}".format(sum(LIST_OF_AVG_CC) / len(LIST_OF_AVG_CC),
-                                                               (sum(LIST_OF_TIME_PER_AVG) / len(LIST_OF_AVG_CC)),
-                                                               sum(LIST_OF_TIME_PER_AVG))
+        sum_data = "TOTAL_NUMBER_OF_WORKERS: {}AVG SUM:{}, AVG TIME:{}, TOTAL TIME: {}\n".format(
+            TOTAL_NUMBER_OF_WORKERS, sum(LIST_OF_AVG_CC) / len(LIST_OF_AVG_CC), (sum(LIST_OF_TIME_PER_AVG) /
+                                                                                 len(LIST_OF_AVG_CC)),
+            sum(LIST_OF_TIME_PER_AVG))
+        with open("sum_results.txt", "a") as sum_res:
+            sum_res.write(sum_data)
 
 
 class AddNewWorker(Resource):
@@ -54,7 +58,7 @@ class AddNewWorker(Resource):
         A worker id and worker directory are assigned to every worker who registers
         :returns worker_id and worker_directory to newly registered worker
         """
-        global NUM_OF_ACTIVE_WORKERS
+        global NUM_OF_ACTIVE_WORKERS, TOTAL_NUMBER_OF_WORKERS
         initial_request_from_worker = request.get_json()['register_wth_manager']
 
         if initial_request_from_worker is True:
@@ -65,6 +69,7 @@ class AddNewWorker(Resource):
             SFL.clone_git_repo(dir_to_clone_into)
             response = {'worker_id': NUM_OF_ACTIVE_WORKERS, 'dir': dir_to_clone_into}
             NUM_OF_ACTIVE_WORKERS += 1
+            TOTAL_NUMBER_OF_WORKERS = NUM_OF_ACTIVE_WORKERS
         else:
             response = {'worker_id': None, 'dir': None}
         return response
@@ -99,4 +104,10 @@ if __name__ == "__main__":
     app.run(debug=False, host='127.0.0.1', port=5000)
     end = time.time()
     time_taken_over_average = end - start
+    ind_data = "TOTAL_NUMBER_OF_WORKERS: {}, SUM_OF_TIME_TAKEN: {}, TIME_TAKEN_TO_RUN: {}\n".format(
+        TOTAL_NUMBER_OF_WORKERS, sum(LIST_OF_TIME_PER_AVG), time_taken_over_average
+    )
+
+    with open("individual_results.txt", "a") as ind_res:
+        ind_res.write(ind_data)
     print "TIME TAKEN TO RUN PROGRAM CC: {}".format(time_taken_over_average)
