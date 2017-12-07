@@ -1,5 +1,10 @@
 import time
 import os
+
+import sys
+
+import shutil
+
 import SharedFunctionLibrary as SFL
 from flask import Flask, request
 from flask_restful import Api, Resource
@@ -11,6 +16,7 @@ api = Api(app)
 
 NUM_OF_ACTIVE_WORKERS = 0
 CURRENT_COMMIT_POSITION = 0
+NUMBER_OF_REQUIRED_WORKERS = 0
 LIST_OF_COMMITS = []
 LIST_OF_AVG_CC = []
 LIST_OF_TIME_PER_AVG = []
@@ -25,13 +31,16 @@ class Manager(Resource):
         :returns the commit each worker needs to calculate the Cyclomatic /McCabe's complexity for
         """
         global CURRENT_COMMIT_POSITION, LIST_OF_COMMITS
-        if len(LIST_OF_COMMITS) > CURRENT_COMMIT_POSITION:
-            commits = LIST_OF_COMMITS[CURRENT_COMMIT_POSITION]
-            CURRENT_COMMIT_POSITION += 1
-            print "commit number:{0}".format(CURRENT_COMMIT_POSITION)
-            response = {'commits': commits}
+        if NUMBER_OF_REQUIRED_WORKERS is NUM_OF_ACTIVE_WORKERS and len(LIST_OF_COMMITS) > CURRENT_COMMIT_POSITION:
+            if len(LIST_OF_COMMITS) > CURRENT_COMMIT_POSITION:
+                commits = LIST_OF_COMMITS[CURRENT_COMMIT_POSITION]
+                CURRENT_COMMIT_POSITION += 1
+                print "commit number:{0}".format(CURRENT_COMMIT_POSITION)
+                response = {'commits': commits}
+            else:
+                response = {'commits': None}
         else:
-            response = {'commits': None}
+            response = {'commits': -1}
         return response
 
     def post(self):
@@ -67,7 +76,7 @@ class AddNewWorker(Resource):
             if not os.path.exists(dir_to_clone_into):
                 os.mkdir(dir_to_clone_into)
             SFL.clone_git_repo(dir_to_clone_into)
-            response = {'worker_id': NUM_OF_ACTIVE_WORKERS, 'dir': 'git_repo'}
+            response = {'worker_id': NUM_OF_ACTIVE_WORKERS, 'dir': dir_to_clone_into}
             NUM_OF_ACTIVE_WORKERS += 1
             TOTAL_NUMBER_OF_WORKERS = NUM_OF_ACTIVE_WORKERS
         else:
@@ -94,7 +103,27 @@ class AddNewWorker(Resource):
 api.add_resource(Manager, '/')
 api.add_resource(AddNewWorker, '/add_new_worker')
 
+
+def clean_up_after_last_run():
+    global NUMBER_OF_REQUIRED_WORKERS
+
+    if os.path.exists("git_repo/"):
+        os.chmod("git_repo/", 0o755)
+        shutil.rmtree("git_repo/")
+    else:
+        print "repo doesnt exist - no need to delete"
+    for i in range(0, NUMBER_OF_REQUIRED_WORKERS):
+        path = "Worker{}".format(i)
+        if os.path.exists(path):
+            os.chmod(path, 0o755)
+            shutil.rmtree(path)
+            print "removed repo {}".format(path)
+
+
 if __name__ == "__main__":
+    NUMBER_OF_REQUIRED_WORKERS = int(sys.argv[1])
+    print "waiting for {} workers to connect".format(NUMBER_OF_REQUIRED_WORKERS)
+    clean_up_after_last_run()
     repo = SFL.clone_git_repo(ROOT_FOR_REPO)
 
     for commit in repo.iter_commits():

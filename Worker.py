@@ -7,7 +7,6 @@ from radon.complexity import SCORE
 
 MANAGER_URL = "http://127.0.0.1:5000"
 INITIAL_MANAGER_CALL = "http://127.0.0.1:5000/add_new_worker"
-ROOT_FOR_REPO = "git_repo/"
 
 
 def initial_call_to_manager():
@@ -44,6 +43,9 @@ class Worker:
             commit = work_from_manager.json()['commits']
             if commit is None:
                 break
+            elif commit is -1:
+                # wait until all workers have cloned the repo
+                self.working = False
             elif work_from_manager is not None:
                 start = time.time()
                 avg_cc = self.work(commit)
@@ -69,6 +71,7 @@ class Worker:
             total_complexity += file_complexity
         num_files += 1
         avg_complexity = total_complexity / num_files
+        print "Worker{}\n".format(self.worker_id)
         print "avg complexity is: {}".format(avg_complexity)
         return avg_complexity
 
