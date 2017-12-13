@@ -163,3 +163,4 @@ if __name__ == "__main__":
         ind_res.write(str(ind_data))
         ind_res.close()
     print "TIME TAKEN TO RUN PROGRAM CC: {}".format(total_time)
+    clean_up_after_last_run()
