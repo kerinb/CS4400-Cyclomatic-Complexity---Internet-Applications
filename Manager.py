@@ -5,6 +5,8 @@ import sys
 
 import shutil
 
+import datetime
+
 import SharedFunctionLibrary as SFL
 from flask import Flask, request
 from flask_restful import Api, Resource
@@ -21,6 +23,9 @@ LIST_OF_COMMITS = []
 LIST_OF_AVG_CC = []
 LIST_OF_TIME_PER_AVG = []
 TOTAL_NUMBER_OF_WORKERS = []
+end = 0.0
+start = 0.0
+avg_cc = 0
 
 
 class Manager(Resource):
@@ -30,7 +35,14 @@ class Manager(Resource):
         specifically my repository for my CS4400-DistributedFileServer project
         :returns the commit each worker needs to calculate the Cyclomatic /McCabe's complexity for
         """
-        global CURRENT_COMMIT_POSITION, LIST_OF_COMMITS
+        global CURRENT_COMMIT_POSITION, LIST_OF_COMMITS, start
+        if CURRENT_COMMIT_POSITION is 0 and int(NUMBER_OF_REQUIRED_WORKERS) is NUMBER_OF_REQUIRED_WORKERS:
+            start = time.time()
+            print"started timer at {}".format(datetime.datetime.now())
+
+        if len(LIST_OF_COMMITS) <= CURRENT_COMMIT_POSITION and NUM_OF_ACTIVE_WORKERS is 0:
+            shutdown()
+
         if NUMBER_OF_REQUIRED_WORKERS is NUM_OF_ACTIVE_WORKERS and len(LIST_OF_COMMITS) > CURRENT_COMMIT_POSITION:
             if len(LIST_OF_COMMITS) > CURRENT_COMMIT_POSITION:
                 commits = LIST_OF_COMMITS[CURRENT_COMMIT_POSITION]
@@ -44,20 +56,24 @@ class Manager(Resource):
         return response
 
     def post(self):
+        global end, avg_cc
         """
         appends the calculated Cyclomatic /McCabes complexity for a git repository
         :returns nothing
         """
         avg = request.get_json()['avg_cc']
-        time_per_commit = request.get_json()['time']
         LIST_OF_AVG_CC.append(avg)
-        LIST_OF_TIME_PER_AVG.append(time_per_commit)
-        sum_data = "TOTAL_NUMBER_OF_WORKERS: {}AVG SUM:{}, AVG TIME:{}, TOTAL TIME: {}\n".format(
-            TOTAL_NUMBER_OF_WORKERS, sum(LIST_OF_AVG_CC) / len(LIST_OF_AVG_CC), (sum(LIST_OF_TIME_PER_AVG) /
-                                                                                 len(LIST_OF_AVG_CC)),
-            sum(LIST_OF_TIME_PER_AVG))
-        with open("sum_results.txt", "a") as sum_res:
-            sum_res.write(sum_data)
+        #print "list_of_avg_cc {}, list_of_commits {}".format(len(LIST_OF_AVG_CC), len(LIST_OF_COMMITS))
+        if len(LIST_OF_AVG_CC) is len(LIST_OF_COMMITS):
+            end = time.time()
+            print"ended timer at {}".format(datetime.datetime.now())
+
+
+def shutdown():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
 
 
 class AddNewWorker(Resource):
@@ -94,10 +110,7 @@ class AddNewWorker(Resource):
         NUM_OF_ACTIVE_WORKERS -= 1
         print "NUMBER OF ACTIVE CLIENTS: {}".format(NUM_OF_ACTIVE_WORKERS)
         if NUM_OF_ACTIVE_WORKERS is 0:
-            func = request.environ.get('werkzeug.server.shutdown')
-            if func is None:
-                raise RuntimeError('Not running with the Werkzeug Server')
-            func()
+            shutdown()
 
 
 api.add_resource(Manager, '/')
@@ -125,18 +138,28 @@ if __name__ == "__main__":
     print "waiting for {} workers to connect".format(NUMBER_OF_REQUIRED_WORKERS)
     clean_up_after_last_run()
     repo = SFL.clone_git_repo(ROOT_FOR_REPO)
+    headers = "'TOTAL_NUMBER_OF_WORKERS', 'SUM_OF_TIME_TAKEN', 'TIME_TAKEN_TO_RUN', 'AVG_CC'\n"
+    with open("individual_results.txt", "a+") as ind_res:
+        data = ind_res.read()
+        if not data:
+            ind_res.write(str(headers))
+        ind_res.close()
 
     for commit in repo.iter_commits():
         LIST_OF_COMMITS.append(str(commit))
 
-    start = time.time()
     app.run(debug=False, host='127.0.0.1', port=5000)
-    end = time.time()
-    time_taken_over_average = end - start
-    ind_data = "TOTAL_NUMBER_OF_WORKERS: {}, SUM_OF_TIME_TAKEN: {}, TIME_TAKEN_TO_RUN: {}\n".format(
-        TOTAL_NUMBER_OF_WORKERS, sum(LIST_OF_TIME_PER_AVG), time_taken_over_average
-    )
 
-    with open("individual_results.txt", "a") as ind_res:
-        ind_res.write(ind_data)
-    print "TIME TAKEN TO RUN PROGRAM CC: {}".format(time_taken_over_average)
+    total_time = end - start
+    cc = 0
+    for i in range(len(LIST_OF_AVG_CC)):
+        cc += LIST_OF_AVG_CC[i]
+    avg_cc = cc/len(LIST_OF_AVG_CC)
+    ind_data = "{}, {}, {}, {}\n".format(
+        TOTAL_NUMBER_OF_WORKERS, sum(LIST_OF_TIME_PER_AVG), total_time, avg_cc
+    )
+    with open("individual_results.txt", "r+") as ind_res:
+        data = ind_res.read()
+        ind_res.write(str(ind_data))
+        ind_res.close()
+    print "TIME TAKEN TO RUN PROGRAM CC: {}".format(total_time)

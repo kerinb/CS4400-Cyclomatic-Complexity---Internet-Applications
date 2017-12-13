@@ -47,11 +47,8 @@ class Worker:
                 # wait until all workers have cloned the repo
                 self.working = False
             elif work_from_manager is not None:
-                start = time.time()
                 avg_cc = self.work(commit)
-                end = time.time()
-                time_taken_over_commit = end - start
-                requests.post(MANAGER_URL,  json={'avg_cc': avg_cc, 'time': time_taken_over_commit})
+                requests.post(MANAGER_URL,  json={'avg_cc': avg_cc})
         print "No more work from manager...\nfunction complete..."
         return self.worker_id
 
@@ -72,8 +69,8 @@ class Worker:
         num_files += 1
         avg_complexity = total_complexity / num_files
         print "Worker{}\n".format(self.worker_id)
-        print "avg complexity is: {}".format(avg_complexity)
-        return avg_complexity
+        print "avg complexity is: {}".format(total_complexity)
+        return total_complexity
 
 
 def shutdownWorker():
