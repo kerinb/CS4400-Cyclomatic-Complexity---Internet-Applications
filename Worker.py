@@ -35,7 +35,7 @@ class Worker:
 
     def __init__(self):
         self.working = True
-        self.worker_id = response, self.working_dir = initial_call_to_manager()
+        self.worker_id, self.working_dir = initial_call_to_manager()
 
     def get_work(self):
         while self.working:
