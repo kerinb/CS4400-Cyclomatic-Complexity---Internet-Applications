@@ -43,27 +43,27 @@ The Manager is available at service URL "http://127.0.0.1:5000" once it has laun
 The logic of the Manager is as follows:
 
 *    Upon launching, perform the following initialisation:
-   * Clean up any old files remaining from a previous run
-   * Clone a fresh copy of the repository on which the calculation is being performed, and store it in directory 'git_repo/'
-   * Iterate through the commits in this cloned repository, and add each one to a global list of commits.
+   *   Clean up any old files remaining from a previous run
+   *   Clone a fresh copy of the repository on which the calculation is being performed, and store it in directory 'git_repo/'
+   *   Iterate through the commits in this cloned repository, and add each one to a global list of commits.
 *    Start accepting registration connections from workers at this point, by launching the server at the service URL. The workers are able to register with the manager at the URL http://127.0.0.1:5000/add_new_worker.
-   * Once a request is received from a worker, the manager will assign a unique ID to it (a global variable incremented for each new worker).
-   * The repository is again cloned for this worker, to a directory 'WorkerX/' where X is the ID of the worker.
-   * Upon receipt of it's registration ID and repository directory, the worker will immediately begin polling the manager for work. However, the Manager will not delegate any work to the worker until all of the workers it expects to connect, have connected.
+   *   Once a request is received from a worker, the manager will assign a unique ID to it (a global variable incremented for each new worker).
+   *   The repository is again cloned for this worker, to a directory 'WorkerX/' where X is the ID of the worker.
+   *   Upon receipt of it's registration ID and repository directory, the worker will immediately begin polling the manager for work. However, the Manager will not delegate any work to the worker until all of the workers it expects to connect, have connected.
 *    Once all of the expected number of workers have registered with the manager, the manager begins to delegate work.
-   * Each worker is given the SHA hash for a commit in the repository. The commit each worker is given is the commit at the next index in the list of commits.
-      * In the case of the first successful request for a commit by a worker, the time is measured and taken to be the start time of the calculation (since this marks the starting point of the calculation of the CC for the repository).
-   * Each worker will perform the calculation on its given commit, and return the average CC for the commit as a single number, to the manager.
+   *   Each worker is given the SHA hash for a commit in the repository. The commit each worker is given is the commit at the next index in the list of commits.
+      *   In the case of the first successful request for a commit by a worker, the time is measured and taken to be the start time of the calculation (since this marks the starting point of the calculation of the CC for the repository).
+   *   Each worker will perform the calculation on its given commit, and return the average CC for the commit as a single number, to the manager.
 *    Once the number of results that the manager has received is equal to the number of commits it had in the first place, (i.e. when the worker working on the final commit posts its results to the manager), the calculation is finished. 
-   * This means that the time is measured again and taken to be the end time of the calculation. The manager now sends the message {'commits':-1} to each of the workers, instructing them to terminate.
-   * Each worker responds to this message by sending a post request to the URL http://127.0.0.1:5000/add_new_worker. When it does so, the number of active workers recorded with the server is decremented
+   *   This means that the time is measured again and taken to be the end time of the calculation. The manager now sends the message {'commits':-1} to each of the workers, instructing them to terminate.
+   *   Each worker responds to this message by sending a post request to the URL http://127.0.0.1:5000/add_new_worker. When it does so, the number of active workers recorded with the server is decremented
 *    The final calculation is now performed: the calculation of the average CC of the repository.
-   * The list of results returned by the workers is iterated through, and added to a running total (the 'total commit complexity').
-   * The average complexity for the entire repository is then calculated by dividing this running total by the number of commits in the repository.
+   *   The list of results returned by the workers is iterated through, and added to a running total (the 'total commit complexity').
+   *   The average complexity for the entire repository is then calculated by dividing this running total by the number of commits in the repository.
 *    Finally, the manager outputs the results to a file _individual_results.txt_. This file has headings:
    'TOTAL_NUMBER_OF_WORKERS' | 'SUM_OF_TIME_TAKEN' | 'TIME_TAKEN_TO_RUN' | 'AVG_CC'
-   * Each of these values is outputted to the file.
-   * All of the directories created during the running of the application are now cleaned up and removed in preparation for the next run.
+   *   Each of these values is outputted to the file.
+   *   All of the directories created during the running of the application are now cleaned up and removed in preparation for the next run.
 
 
 #### The Worker Node ####
