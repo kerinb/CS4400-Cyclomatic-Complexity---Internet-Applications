@@ -45,9 +45,9 @@ The logic of the Manager is as follows:
 
 * Upon launching, perform the following initialisation:
     * Clean up any old files remaining from a previous run
-    * Clone a fresh copy of the repository on which the calculation is being performed, and store it in directory 'git_repo/'
+    * Clone a fresh copy of the repository on which the calculation is being performed, and store it in directory '**git_repo/**'
     * Iterate through the commits in this cloned repository, and add each one to a global list of commits.
-* Start accepting registration connections from workers at this point, by launching the server at the service URL. The workers are able to register with the manager at the URL http://127.0.0.1:5000/add_new_worker.
+* Start accepting registration connections from workers at this point, by launching the server at the service URL. The workers are able to register with the manager at the URL **http://127.0.0.1:5000/add_new_worker**.
     * Once a request is received from a worker, the manager will assign a unique ID to it (a global variable incremented for each new worker).
     * The repository is again cloned for this worker, to a directory '**WorkerX/**' where X is the ID of the worker.
     * Upon receipt of it's registration ID and repository directory, the worker will immediately begin polling the manager for work. However, the Manager will not delegate any work to the worker until all of the workers it expects to connect, have connected.
@@ -80,18 +80,18 @@ The logic of a worker node is as follows:
     * **{'commits': -1}** indicates that there is no more work left to do, and so the worker terminates execution.
     * **{'commits': commit}** provides the hash corresponding to a commit in the cloned repository, instructing the worker to perform a calculation on the repository at this commit.
 * Once the worker is given work to do:
-    * The worker checks out the repository at the specified commit, and extracts the python files (since non-python files cannot be analysed for cyclomatic complexity by the Radon library)
+    * The worker checks out the repository at the specified commit, and extracts the python files (since non-python files cannot be analysed for cyclomatic complexity by the Radon library).
     * The worker then iterates over each file in this commit, calculating the cyclomatic complexity and adding the result to a running total.
     * Once the cyclomatic complexity has been calculated for all files in the commit, the worker calculates the average complexity of the commit by dividing the running total by the number of files in the commit. 
     * This result is then sent back to the Manager, and the worker proceeds to poll the Manager for more work.
-* Once there is no more work to do, the worker will receive the {'commits': -1} response to a request for more work - an instruction to terminate. The worker responds to this with a post request to the URL http://127.0.0.1:5000/add_new_worker, and then terminates.
+* Once there is no more work to do, the worker will receive the **{'commits': -1}** response to a request for more work - an instruction to terminate. The worker responds to this with a post request to the URL **http://127.0.0.1:5000/add_new_worker**, and then terminates.
 
 #### The Shared Function Library ####
 The shared function library contains the shared method and variables to clone the required git repository.
 
 
 ### Results ###
-The results obtained from the experiments can be viewed in the file _"individual_results.txt"_.
+The results obtained from the experiments can be viewed in the file _"**individual_results.txt**"_.
 
 In this file, the results are entered in CSV format. For the purposes of this investigation, the number of workers spawned was increased systematically from 1 to 20 to compare the difference in the time taken for them to calculate the average _CC_. The resulting graph is shown in the below image.
 
